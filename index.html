@@ -2,83 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Supabase Info Manager</title>
+  <title>Automatic Couscous</title>
 </head>
 <body>
+  <h1>Information Manager</h1>
+  <pre id="output"></pre>
+
   <script>
-    // 🟢 إعدادات Supabase
+    // إعدادات Supabase
     const supabaseUrl = 'https://fvcngwplkyplczncrjds.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2Y25nd3Bsa3lwbGN6bmNyamRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4NzY0MTEsImV4cCI6MjA1OTQ1MjQxMX0.64_cGan5_rJLQy_du5fldAG-_Lqpoi2jl3vUl9lG0Xs'; // 👈 استبدلها بمفتاح anon من Supabase
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2Y25nd3Bsa3lwbGN6bmNyamRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4NzY0MTEsImV4cCI6MjA1OTQ1MjQxMX0.64_cGan5_rJLQy_du5fldAG-_Lqpoi2jl3vUl9lG0Xs';
     const tableName = 'informations';
 
-    async function sendRequest(type, information = '', new_information = '') {
-      switch (type) {
-        case 'add':
-          if (!information) return console.error('Information is required');
-          const { data: added, error: addError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
-            method: 'POST',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({ info: information })
-          }).then(res => res.json());
-          console.log('Added:', added || addError);
-          break;
+    // دالة لتحليل معلمات URL
+    function getURLParameter(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
 
-        case 'edit':
-          if (!information || !new_information) return console.error('Both info and new_info are required');
-          const { data: edited, error: editError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}?info=eq.${information}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({ info: new_information })
-          }).then(res => res.json());
-          console.log('Edited:', edited || editError);
-          break;
+    async function sendRequest(type, information = '') {
+      const output = document.getElementById('output');
+      
+      try {
+        let res;
+        switch (type) {
+          case 'add':
+            if (!information) return alert('Information is required');
+            res = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
+              method: 'POST',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+              },
+              body: JSON.stringify({ info: information })
+            });
+            break;
 
-        case 'delete':
-          if (!information) return console.error('Information is required');
-          const { data: deleted, error: deleteError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}?info=eq.${information}`, {
-            method: 'DELETE',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Prefer': 'return=representation'
-            }
-          }).then(res => res.json());
-          console.log('Deleted:', deleted || deleteError);
-          break;
+          case 'edit':
+            // تحتاج لتوفير المعلمات اللازمة لتعديل البيانات
+            break;
 
-        case 'show':
-          const { data: shown, error: showError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
-            method: 'GET',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json'
-            }
-          }).then(res => res.json());
-          console.log('Data:', shown || showError);
-          break;
+          case 'delete':
+            // تحتاج لتوفير المعلمات اللازمة لحذف البيانات
+            break;
 
-        default:
-          console.error('Invalid type');
+          case 'show':
+            res = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
+              method: 'GET',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`
+              }
+            });
+            break;
+
+          default:
+            output.textContent = 'Invalid type.';
+            return;
+        }
+
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+
+      } catch (error) {
+        output.textContent = 'Error: ' + error;
       }
     }
 
-    // ✅ اختبر الوظائف هنا:
+    // تحليل معلمات URL
+    const type = getURLParameter('type');
+    const information = getURLParameter('information');
 
-    // sendRequest('add', 'Hello World');
-    // sendRequest('edit', 'Hello World', 'Hi Ammar');
-    // sendRequest('delete', 'Hi Ammar');
-    // sendRequest('show');
+    // إذا كانت المعلمات موجودة، تنفيذ الدالة المناسبة
+    if (type && information) {
+      sendRequest(type, information);
+    } else {
+      document.getElementById('output').textContent = 'Missing parameters.';
+    }
   </script>
 </body>
 </html>
