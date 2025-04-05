@@ -5,7 +5,6 @@
   <title>Automatic Couscous</title>
 </head>
 <body>
-  <h1>Information Manager</h1>
   <pre id="output"></pre>
 
   <script>
@@ -20,7 +19,7 @@
       return urlParams.get(name);
     }
 
-    async function sendRequest(type, information = '') {
+    async function sendRequest(type, information = '', new_information = '') {
       const output = document.getElementById('output');
       
       try {
@@ -41,11 +40,59 @@
             break;
 
           case 'edit':
-            // تحتاج لتوفير المعلمات اللازمة لتعديل البيانات
+            if (!information || !new_information) return alert('Both information and new_information are required for edit');
+
+            // أولاً، الحصول على المعلومة القديمة من الجدول
+            let { data, error } = await fetch(`${supabaseUrl}/rest/v1/${tableName}?info=eq.${information}`, {
+              method: 'GET',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+              }
+            }).then(res => res.json());
+
+            if (data.length === 0) {
+              alert('Information not found');
+              return;
+            }
+
+            // تحديث المعلومة إلى الجديدة
+            res = await fetch(`${supabaseUrl}/rest/v1/${tableName}?id=eq.${data[0].id}`, {
+              method: 'PATCH',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ info: new_information })  // تحديث المعلومة
+            });
             break;
 
           case 'delete':
-            // تحتاج لتوفير المعلمات اللازمة لحذف البيانات
+            if (!information) return alert('Information is required for delete');
+            
+            // أولاً، الحصول على المعلومة من الجدول
+            let deleteData = await fetch(`${supabaseUrl}/rest/v1/${tableName}?info=eq.${information}`, {
+              method: 'GET',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+              }
+            }).then(res => res.json());
+
+            if (deleteData.length === 0) {
+              alert('Information not found');
+              return;
+            }
+
+            // حذف المعلومة
+            res = await fetch(`${supabaseUrl}/rest/v1/${tableName}?id=eq.${deleteData[0].id}`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+              }
+            });
             break;
 
           case 'show':
@@ -74,10 +121,11 @@
     // تحليل معلمات URL
     const type = getURLParameter('type');
     const information = getURLParameter('information');
+    const new_information = getURLParameter('new_information');
 
     // إذا كانت المعلمات موجودة، تنفيذ الدالة المناسبة
     if (type && information) {
-      sendRequest(type, information);
+      sendRequest(type, information, new_information);
     } else {
       document.getElementById('output').textContent = 'Missing parameters.';
     }
