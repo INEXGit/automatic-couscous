@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Info Manager</title>
+</head>
+<body>
+  <script>
+    // 🟢 إعدادات Supabase
+    const supabaseUrl = 'https://fvcngwplkyplczncrjds.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2Y25nd3Bsa3lwbGN6bmNyamRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4NzY0MTEsImV4cCI6MjA1OTQ1MjQxMX0.64_cGan5_rJLQy_du5fldAG-_Lqpoi2jl3vUl9lG0Xs'; // 👈 استبدلها بمفتاح anon من Supabase
+    const tableName = 'informations';
+
+    async function sendRequest(type, information = '', new_information = '') {
+      switch (type) {
+        case 'add':
+          if (!information) return console.error('Information is required');
+          const { data: added, error: addError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
+            method: 'POST',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ info: information })
+          }).then(res => res.json());
+          console.log('Added:', added || addError);
+          break;
+
+        case 'edit':
+          if (!information || !new_information) return console.error('Both info and new_info are required');
+          const { data: edited, error: editError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}?info=eq.${information}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ info: new_information })
+          }).then(res => res.json());
+          console.log('Edited:', edited || editError);
+          break;
+
+        case 'delete':
+          if (!information) return console.error('Information is required');
+          const { data: deleted, error: deleteError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}?info=eq.${information}`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Prefer': 'return=representation'
+            }
+          }).then(res => res.json());
+          console.log('Deleted:', deleted || deleteError);
+          break;
+
+        case 'show':
+          const { data: shown, error: showError } = await fetch(`${supabaseUrl}/rest/v1/${tableName}`, {
+            method: 'GET',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json'
+            }
+          }).then(res => res.json());
+          console.log('Data:', shown || showError);
+          break;
+
+        default:
+          console.error('Invalid type');
+      }
+    }
+
+    // ✅ اختبر الوظائف هنا:
+
+    // sendRequest('add', 'Hello World');
+    // sendRequest('edit', 'Hello World', 'Hi Ammar');
+    // sendRequest('delete', 'Hi Ammar');
+    // sendRequest('show');
+  </script>
+</body>
+</html>
