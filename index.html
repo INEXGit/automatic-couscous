@@ -124,7 +124,7 @@
     const new_information = getURLParameter('new_information');
 
     // إذا كانت المعلمات موجودة، تنفيذ الدالة المناسبة
-    if (type && information) {
+    if (type) {
       sendRequest(type, information, new_information);
     } else {
       document.getElementById('output').textContent = 'Missing parameters.';
